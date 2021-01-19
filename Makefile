@@ -13,10 +13,10 @@
 # limitations under the License.
 
 TARGET = eventrouter
-GOTARGET = github.com/heptiolabs/$(TARGET)
+GOTARGET = github.com/rubik-ai/$(TARGET)
 BUILDMNT = /src/
-REGISTRY ?= gcr.io/heptio-images
-VERSION ?= v0.3
+REGISTRY ?= docker.io/rubiklabs
+VERSION ?= v0.3.d1
 IMAGE = $(REGISTRY)/$(BIN)
 BUILD_IMAGE ?= golang:1.12.9
 DOCKER ?= docker
@@ -40,11 +40,8 @@ container:
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
 
 push:
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(VERSION)
 	$(DOCKER) push $(REGISTRY)/$(TARGET):latest
-	if git describe --tags --exact-match >/dev/null 2>&1; \
-	then \
-		$(DOCKER) push $(REGISTRY)/$(TARGET):$(VERSION); \
-	fi
 
 test:
 	$(DOCKER_BUILD) '$(TEST)'

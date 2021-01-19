@@ -83,7 +83,7 @@ func ManufactureSink() (e EventSinkInterface) {
 		viper.SetDefault("kafkaTopic", "eventrouter")
 		viper.SetDefault("schemaPath", "")
 		viper.SetDefault("schema", "")
-		viper.SetDefault("schemaRegistryUrl", "http://loccalhost:8081")
+		viper.SetDefault("schemaRegistryUrl", "http://localhost:8081")
 		viper.SetDefault("kafkaAsync", true)
 		viper.SetDefault("kafkaRetryMax", 5)
 		viper.SetDefault("kafkaSaslUser", "")
