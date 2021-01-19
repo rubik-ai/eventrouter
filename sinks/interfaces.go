@@ -78,6 +78,32 @@ func ManufactureSink() (e EventSinkInterface) {
 			panic(err.Error())
 		}
 		return e
+	case "kafkaavro":
+		viper.SetDefault("kafkaBrokers", []string{"kafka:9092"})
+		viper.SetDefault("kafkaTopic", "eventrouter")
+		viper.SetDefault("schemaPath", "")
+		viper.SetDefault("schema", "")
+		viper.SetDefault("schemaRegistryUrl", "http://loccalhost:8081")
+		viper.SetDefault("kafkaAsync", true)
+		viper.SetDefault("kafkaRetryMax", 5)
+		viper.SetDefault("kafkaSaslUser", "")
+		viper.SetDefault("kafkaSaslPwd", "")
+
+		brokers := viper.GetStringSlice("kafkaBrokers")
+		topic := viper.GetString("kafkaTopic")
+		schemaPath := viper.GetString("schemaPath")
+		schema := viper.GetString("schema")
+		schemaRegistryUrl := viper.GetString("schemaRegistryUrl")
+		async := viper.GetBool("kakfkaAsync")
+		retryMax := viper.GetInt("kafkaRetryMax")
+		saslUser := viper.GetString("kafkaSaslUser")
+		saslPwd := viper.GetString("kafkaSaslPwd")
+
+		ak, err := NewKafkaAvroSink(brokers, topic, schemaPath, schema, schemaRegistryUrl, async, retryMax, saslUser, saslPwd)
+		if err != nil {
+			panic(err.Error())
+		}
+		return ak
 	case "s3sink":
 		accessKeyID := viper.GetString("s3SinkAccessKeyID")
 		if accessKeyID == "" {

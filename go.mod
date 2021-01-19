@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Azure/azure-event-hubs-go/v2 v2.0.3
+	github.com/Landoop/schema-registry v0.0.0-20190327143759-50a5701c1891
 	github.com/Shopify/sarama v1.23.1
 	github.com/aws/aws-sdk-go v1.23.2
 	github.com/crewjam/rfc5424 v0.0.0-20180723152949-c25bdd3a0ba2
@@ -13,6 +14,7 @@ require (
 	github.com/influxdata/influxdb v1.7.7
 	github.com/json-iterator/go v1.1.7
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/linkedin/goavro/v2 v2.10.0
 	github.com/nytlabs/gojsonexplode v0.0.0-20160201065013-0f3fe6bb573f
 	github.com/prometheus/client_golang v1.1.0
 	github.com/rockset/rockset-go-client v0.6.0

@@ -1,0 +1,79 @@
+{
+  "namespace" : "default",
+  "name" : "eventrouter",
+  "type" : "record",
+  "fields" : [ {
+    "name" : "verb",
+    "type" : "string"
+  }, {
+    "name" : "event",
+    "type" : {
+      "type" : "record",
+      "name" : "event_25",
+      "fields" : [ {
+        "name" : "metadata",
+        "type" : {
+          "type" : "record",
+          "name" : "metadata_52",
+          "fields" : [ {
+            "name" : "name",
+            "type" : "string"
+          }, {
+            "name" : "creationTimestamp",
+            "type" : [ "null" ]
+          } ]
+        }
+      }, {
+        "name" : "involvedObject",
+        "type" : {
+          "type" : "record",
+          "name" : "involvedObject_77",
+          "fields" : [ {
+            "name" : "kind",
+            "type" : "string"
+          }, {
+            "name" : "uid",
+            "type" : "string"
+          }, {
+            "name" : "apiVersion",
+            "type" : "string"
+          } ]
+        }
+      }, {
+        "name" : "reason",
+        "type" : "string"
+      }, {
+        "name" : "message",
+        "type" : "string"
+      }, {
+        "name" : "source",
+        "type" : {
+          "type" : "record",
+          "name" : "source_8",
+          "fields" : [ ]
+        }
+      }, {
+        "name" : "firstTimestamp",
+        "type" : "string"
+      }, {
+        "name" : "lastTimestamp",
+        "type" : "string"
+      }, {
+        "name" : "count",
+        "type" : "double"
+      }, {
+        "name" : "type",
+        "type" : "string"
+      }, {
+        "name" : "eventTime",
+        "type" : [ "null" ]
+      }, {
+        "name" : "reportingComponent",
+        "type" : "string"
+      }, {
+        "name" : "reportingInstance",
+        "type" : "string"
+      } ]
+    }
+  } ]
+}
