@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -39,6 +41,8 @@ type KafkaAvroSink struct {
 	Codec    *goavro.Codec
 	SchemaID int
 }
+
+var unsupportedKeywords = []string{"/", ".", "-"}
 
 func loadSchema(schemaPath string) (string, error) {
 	t := &http.Transport{}
@@ -159,6 +163,7 @@ func (ks *KafkaAvroSink) UpdateEvents(eNew *v1.Event, eOld *v1.Event) {
 		glog.Errorf("Failed to json serialize event: %v", err)
 		return
 	}
+
 	msg := &sarama.ProducerMessage{
 		Topic: ks.Topic,
 		Key:   sarama.StringEncoder(eNew.InvolvedObject.Name),
@@ -186,7 +191,19 @@ func (ks *KafkaAvroSink) UpdateEvents(eNew *v1.Event, eOld *v1.Event) {
 
 }
 
-func getAvroBinary(schemaID int, codec *goavro.Codec, value []byte) []byte {
+func getAvroBinary(schemaID int, codec *goavro.Codec, text []byte) []byte {
+
+	// replace (/.) from key
+	var data interface{}
+	json.Unmarshal(text, &data)
+	for _, keyword := range unsupportedKeywords {
+		data = iterate(data, keyword)
+	}
+	value, err := json.Marshal(data)
+	if nil != err {
+		glog.Errorf("Failed to remove keywords from key: %v", err)
+	}
+
 	binarySchemaId := make([]byte, 4)
 	binary.BigEndian.PutUint32(binarySchemaId, uint32(schemaID))
 
@@ -209,4 +226,53 @@ func getAvroBinary(schemaID int, codec *goavro.Codec, value []byte) []byte {
 	binaryMsg = append(binaryMsg, binaryValue...)
 
 	return binaryMsg
+}
+
+func iterate(data interface{}, regexStr string) interface{} {
+
+	if reflect.ValueOf(data).Kind() == reflect.Slice {
+		d := reflect.ValueOf(data)
+		tmpData := make([]interface{}, d.Len())
+		returnSlice := make([]interface{}, d.Len())
+		for i := 0; i < d.Len(); i++ {
+			tmpData[i] = d.Index(i).Interface()
+		}
+		for i, v := range tmpData {
+			returnSlice[i] = iterate(v, regexStr)
+		}
+		return returnSlice
+	} else if reflect.ValueOf(data).Kind() == reflect.Map {
+		d := reflect.ValueOf(data)
+		tmpData := make(map[string]interface{})
+		for _, k := range d.MapKeys() {
+			match, err := regexp.MatchString(regexStr, k.String())
+			if nil != err {
+				panic(err)
+			}
+			value := reflect.TypeOf(d.MapIndex(k).Interface())
+			var typeOfValue reflect.Kind
+			// check null
+			if value == nil {
+				typeOfValue = reflect.TypeOf("").Kind()
+			} else {
+				typeOfValue = value.Kind()
+			}
+			if match {
+				new_key := strings.Replace(k.String(), regexStr, "_", -1)
+				if typeOfValue == reflect.Map || typeOfValue == reflect.Slice {
+					tmpData[new_key] = iterate(d.MapIndex(k).Interface(), regexStr)
+				} else {
+					tmpData[new_key] = d.MapIndex(k).Interface()
+				}
+			} else {
+				if typeOfValue == reflect.Map || typeOfValue == reflect.Slice {
+					tmpData[k.String()] = iterate(d.MapIndex(k).Interface(), regexStr)
+				} else {
+					tmpData[k.String()] = d.MapIndex(k).Interface()
+				}
+			}
+		}
+		return tmpData
+	}
+	return data
 }

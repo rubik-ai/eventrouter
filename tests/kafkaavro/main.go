@@ -38,7 +38,7 @@ type KafkaAvroEnv struct {
 
 func main() {
 	var k KafkaAvroEnv
-	err := envconfig.Process("kafka_confluent", &k)
+	err := envconfig.Process("kafkaavro", &k)
 	if err != nil {
 		log.Fatal(err)
 	}
