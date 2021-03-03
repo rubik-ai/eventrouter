@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -42,9 +40,9 @@ type KafkaAvroSink struct {
 	SchemaID int
 }
 
-var unsupportedKeywords = []string{"/", ".", "-"}
+// var unsupportedKeywords = []string{"/", ".", "-"}
 
-func loadSchema(schemaPath string) (string, error) {
+func loadAvroSchema(schemaPath string) (string, error) {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 	c := &http.Client{Transport: t}
@@ -82,7 +80,7 @@ func NewKafkaAvroSink(brokers []string, topic string, schemaPath string, schema 
 			return nil, fmt.Errorf("invalid schema_path provided, must start with file:// or http://")
 		}
 
-		avroSchema, err = loadSchema(schemaLocation)
+		avroSchema, err = loadAvroSchema(schemaLocation)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load Avro schema definition: %v", err)
 		}
@@ -191,18 +189,7 @@ func (ks *KafkaAvroSink) UpdateEvents(eNew *v1.Event, eOld *v1.Event) {
 
 }
 
-func getAvroBinary(schemaID int, codec *goavro.Codec, text []byte) []byte {
-
-	// replace (/.) from key
-	var data interface{}
-	json.Unmarshal(text, &data)
-	for _, keyword := range unsupportedKeywords {
-		data = iterate(data, keyword)
-	}
-	value, err := json.Marshal(data)
-	if nil != err {
-		glog.Errorf("Failed to remove keywords from key: %v", err)
-	}
+func getAvroBinary(schemaID int, codec *goavro.Codec, value []byte) []byte {
 
 	binarySchemaId := make([]byte, 4)
 	binary.BigEndian.PutUint32(binarySchemaId, uint32(schemaID))
@@ -226,53 +213,4 @@ func getAvroBinary(schemaID int, codec *goavro.Codec, text []byte) []byte {
 	binaryMsg = append(binaryMsg, binaryValue...)
 
 	return binaryMsg
-}
-
-func iterate(data interface{}, regexStr string) interface{} {
-
-	if reflect.ValueOf(data).Kind() == reflect.Slice {
-		d := reflect.ValueOf(data)
-		tmpData := make([]interface{}, d.Len())
-		returnSlice := make([]interface{}, d.Len())
-		for i := 0; i < d.Len(); i++ {
-			tmpData[i] = d.Index(i).Interface()
-		}
-		for i, v := range tmpData {
-			returnSlice[i] = iterate(v, regexStr)
-		}
-		return returnSlice
-	} else if reflect.ValueOf(data).Kind() == reflect.Map {
-		d := reflect.ValueOf(data)
-		tmpData := make(map[string]interface{})
-		for _, k := range d.MapKeys() {
-			match, err := regexp.MatchString(regexStr, k.String())
-			if nil != err {
-				panic(err)
-			}
-			value := reflect.TypeOf(d.MapIndex(k).Interface())
-			var typeOfValue reflect.Kind
-			// check null
-			if value == nil {
-				typeOfValue = reflect.TypeOf("").Kind()
-			} else {
-				typeOfValue = value.Kind()
-			}
-			if match {
-				new_key := strings.Replace(k.String(), regexStr, "_", -1)
-				if typeOfValue == reflect.Map || typeOfValue == reflect.Slice {
-					tmpData[new_key] = iterate(d.MapIndex(k).Interface(), regexStr)
-				} else {
-					tmpData[new_key] = d.MapIndex(k).Interface()
-				}
-			} else {
-				if typeOfValue == reflect.Map || typeOfValue == reflect.Slice {
-					tmpData[k.String()] = iterate(d.MapIndex(k).Interface(), regexStr)
-				} else {
-					tmpData[k.String()] = d.MapIndex(k).Interface()
-				}
-			}
-		}
-		return tmpData
-	}
-	return data
 }

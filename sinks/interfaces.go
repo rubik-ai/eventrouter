@@ -18,6 +18,7 @@ package sinks
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/golang/glog"
 	"github.com/spf13/viper"
@@ -58,6 +59,31 @@ func ManufactureSink() (e EventSinkInterface) {
 		h := NewHTTPSink(url, overflow, bufferSize)
 		go h.Run(make(chan bool))
 		return h
+	case "pulsar":
+		viper.SetDefault("pulsarUrl", "pulsar://localhost:6650")
+		viper.SetDefault("pulsarTopic", "eventrouter")
+		viper.SetDefault("format", "json")
+		viper.SetDefault("schema", "")
+		viper.SetDefault("schemaPath", "")
+		viper.SetDefault("properties", make(map[string]string))
+
+		url := viper.GetString("pulsarUrl")
+		topic := viper.GetString("pulsarTopic")
+		format := viper.GetString("format")
+		schema := viper.GetString("schema")
+		schemaPath := viper.GetString("schemaPath")
+		properties := viper.GetStringMapString("properties")
+		if strings.ToUpper(format) == AVRO_FORMAT {
+			if schema != "" || schemaPath != "" {
+				panic("Schema must not be null or empty!! Using Avro")
+			}
+
+		}
+		e, err := NewPulsarSink(url, topic, format, schema, schemaPath, properties)
+		if err != nil {
+			panic(err.Error())
+		}
+		return e
 	case "kafka":
 		viper.SetDefault("kafkaBrokers", []string{"kafka:9092"})
 		viper.SetDefault("kafkaTopic", "eventrouter")
