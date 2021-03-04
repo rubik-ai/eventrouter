@@ -60,26 +60,25 @@ func ManufactureSink() (e EventSinkInterface) {
 		go h.Run(make(chan bool))
 		return h
 	case "pulsar":
-		viper.SetDefault("pulsarUrl", "pulsar://localhost:6650")
+		viper.SetDefault("pulsarBrokers", "pulsar://localhost:6650")
 		viper.SetDefault("pulsarTopic", "eventrouter")
-		viper.SetDefault("format", "json")
+		viper.SetDefault("format", "NONE")
 		viper.SetDefault("schema", "")
 		viper.SetDefault("schemaPath", "")
 		viper.SetDefault("properties", make(map[string]string))
 
-		url := viper.GetString("pulsarUrl")
+		brokers := viper.GetString("pulsarBrokers")
 		topic := viper.GetString("pulsarTopic")
 		format := viper.GetString("format")
 		schema := viper.GetString("schema")
 		schemaPath := viper.GetString("schemaPath")
 		properties := viper.GetStringMapString("properties")
-		if strings.ToUpper(format) == AVRO_FORMAT {
+		if strings.ToUpper(format) == AVRO_FORMAT || strings.ToUpper(format) == JSON_FORMAT {
 			if schema != "" || schemaPath != "" {
-				panic("Schema must not be null or empty!! Using Avro")
+				panic("Schema must not be null or empty!!")
 			}
-
 		}
-		e, err := NewPulsarSink(url, topic, format, schema, schemaPath, properties)
+		e, err := NewPulsarSink(brokers, topic, format, schema, schemaPath, properties)
 		if err != nil {
 			panic(err.Error())
 		}

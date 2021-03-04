@@ -17,6 +17,7 @@ LABEL maintainer="Rubik Labs <labs@rubik.ai>"
 
 WORKDIR /app
 RUN apk update --no-cache && apk add ca-certificates
+COPY zstd_cgo.go /root/go/pkg/mod/github.com/apache/pulsar-client-go@v0.3.0/pulsar/internal/compression/zstd_cgo.go
 ADD eventrouter /app/
 USER nobody:nobody
 

@@ -39,9 +39,9 @@ const AVRO_FORMAT = "AVRO"
 const JSON_FORMAT = "JSON"
 
 // NewPulsarSink will create a new PulsarSink with default options, returned as an EventSinkInterface
-func NewPulsarSink(url string, topic string, format, schema string, schemaPath string, properties map[string]string) (EventSinkInterface, error) {
+func NewPulsarSink(brokers string, topic string, format, schema string, schemaPath string, properties map[string]string) (EventSinkInterface, error) {
 
-	pc, err := pulsarClientFactory(url)
+	pc, err := pulsarClientFactory(brokers)
 	if nil != err {
 		glog.Errorf("Failed to create pulsar client: %v", err)
 		return nil, err
@@ -95,9 +95,9 @@ func loadSchema(schemaPath string) (string, error) {
 	return string(body), nil
 }
 
-func pulsarClientFactory(url string) (pulsar.Client, error) {
+func pulsarClientFactory(brokers string) (pulsar.Client, error) {
 	return pulsar.NewClient(pulsar.ClientOptions{
-		URL:               url,
+		URL:               brokers,
 		OperationTimeout:  30 * time.Second,
 		ConnectionTimeout: 30 * time.Second,
 	})
